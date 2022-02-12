@@ -1,0 +1,56 @@
+﻿@page "/invertories"
+
+@attribute [Authorize]
+
+@inject NavigationManager NavigationManager
+@inject IViewInvertoriesByNameUseCase ViewInvertoriesByNameUseCase
+
+<h3>InvertoryList</h3>
+<br />
+
+<ViewInvertoriesComponent 
+        OnSearchInvertories="OnSearchInvertories"
+></ViewInvertoriesComponent>
+<br />
+
+<button type="button" class="btn btn-primary" @onclick="AddInvertory">Add Invertory</button>
+
+@if (_invertories != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var invertory in _invertories)
+            {
+                <InvertoryItemComponent Invertory="invertory"></InvertoryItemComponent>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<Invertory>? _invertories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var invs = await ViewInvertoriesByNameUseCase.ExecuteAsync();
+        _invertories = invs.ToList();
+    }
+
+    private void OnSearchInvertories(List<Invertory> invertories)
+    {
+        _invertories = invertories;
+    }
+
+    private void AddInvertory()
+    {
+        NavigationManager.NavigateTo("/addinvertory");
+    }
+}

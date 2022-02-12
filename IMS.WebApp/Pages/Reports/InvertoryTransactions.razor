@@ -1,0 +1,94 @@
+﻿@page "/invertoryreport"
+
+@using IMS.CoreBusiness.Enums
+
+@inject IGetInvertoryTransactionsUseCase GetInvertoryTransactionsUseCase
+@inject IJSRuntime JSRuntime
+
+<h3>Invertory Transactions</h3>
+<br />
+
+<div id="printarea">
+    <div class="row">
+        <div class="col">
+            <label for="name">Invertory Name</label>
+            <input type="text" id="name" class="form-control" @bind-value="_invertoryName" />
+        </div>
+        <div class="col">
+            <label for="from">From</label>
+            <input type="date" id="from" class="form-control" @bind-value="_from" />
+        </div>
+        <div class="col">
+            <label for="to">To</label>
+            <input type="date" id="to" class="form-control" @bind-value="_to" />
+        </div>
+        <div class="col">
+            <label for="type">Type</label>
+            <select id="type" class="form-control" @bind="_type">
+                <option value="0">Please Select Type</option>
+                <option value="1">Purchase Invertory</option>
+                <option value="2">Produce Product</option>
+            </select>
+        </div>
+        <div class="col">
+            <label>&nbsp;</label>
+            <button type="button" class="btn btn-primary form-control" @onclick="SearchInvertories">Search</button>
+        </div>
+        <div class="col">
+            <label>&nbsp;</label>
+            <button type="button" class="btn btn-primary form-control" @onclick="PrintReport">Print</button>
+        </div>
+    </div>
+    <br />
+
+    @if (_invertoryTransactions != null)
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Invertory</th>
+                    <th>Activity</th>
+                    <th>Quantity Before</th>
+                    <th>Quantity After</th>
+                    <th>PO #</th>
+                    <th>Production #</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var invertoryTransaction in _invertoryTransactions)
+                {
+                    <tr>
+                        <td>@invertoryTransaction.Date.ToString("dd/MM/yyyy")</td>
+                        <td>@invertoryTransaction.Invertory.Name</td>
+                        <td>
+                            @Enum.GetName(typeof(InvertoryTransactionType), invertoryTransaction.Type)
+                        </td>
+                        <td>@invertoryTransaction.QuantityBefore</td>
+                        <td>@invertoryTransaction.QuantityAfter</td>
+                        <td>@invertoryTransaction.PONumber</td>
+                        <td>@invertoryTransaction.ProductionNumber</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@code {
+    private string? _invertoryName;
+    private DateTime? _from;
+    private DateTime? _to;
+    private int _type = 0;
+    private IEnumerable<InvertoryTransaction>? _invertoryTransactions;
+
+    private async Task SearchInvertories()
+    {
+        _invertoryTransactions = await GetInvertoryTransactionsUseCase.ExecuteAsync(_invertoryName, _from, _to, (InvertoryTransactionType)_type);
+    }
+
+    private void PrintReport()
+    {
+        JSRuntime.InvokeVoidAsync("print");
+    }
+}

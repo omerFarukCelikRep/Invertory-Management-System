@@ -1,0 +1,71 @@
+﻿@inject IViewInvertoriesByNameUseCase ViewInvertoriesByNameUseCase
+
+<div class="input-group">
+    <input type="text"
+           class="form-control form-control-lg"
+           placeholder="Type invertory name here to search"
+           @bind-value="InvertoryNameToSearch" 
+           @bind-value:event="oninput"/>
+    <button type="button" class="input-group-text btn-success" @onclick="@(async () => { await ViewInvertories();})">View</button>
+</div>
+
+@if (DisplaySearchResult && _invertories != null && _selectedInvertory == null)
+{
+    <div style="overflow-y:auto; max-height:300px; border:1px solid silver; padding-top:3px;">
+        <ul style="list-style-type:none">
+            @foreach (var invertory in _invertories)
+            {
+                <li style="cursor:pointer" @onclick="@(async () => { await SelectInvertory(invertory); })" @key="invertory.Id">@invertory.Name</li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    private List<Invertory>? _invertories;
+    private Invertory? _selectedInvertory;
+    private string? _invertoryNameToSearch;
+
+    public string? InvertoryNameToSearch 
+    { 
+        get => _invertoryNameToSearch;
+        set
+        {
+            _invertoryNameToSearch = value;
+
+            if (!string.IsNullOrWhiteSpace(_invertoryNameToSearch) && _invertoryNameToSearch.Length > 2)
+            {
+                ViewInvertories();
+
+            }
+        } 
+    }
+
+    [Parameter]
+    public EventCallback<List<Invertory>> OnSearchInvertories { get; set; }
+
+    [Parameter]
+    public EventCallback<Invertory> OnSelectInvertory { get; set; }
+
+    [Parameter]
+    public bool DisplaySearchResult { get; set; } = false;
+
+    private async Task ViewInvertories()
+    {
+        var invertories = (await ViewInvertoriesByNameUseCase.ExecuteAsync(_invertoryNameToSearch ?? string.Empty))?.ToList();
+
+        await OnSearchInvertories.InvokeAsync(invertories);
+
+        _invertories = invertories;
+
+        _selectedInvertory = null;
+
+        StateHasChanged();
+    }
+
+    private async Task SelectInvertory(Invertory invertory)
+    {
+        await OnSelectInvertory.InvokeAsync(invertory);
+        _selectedInvertory = invertory;
+    }
+}

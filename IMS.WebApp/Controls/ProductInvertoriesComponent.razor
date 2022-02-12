@@ -1,0 +1,74 @@
+﻿<div class="form-group">
+    <label>Invertories</label>
+    <ViewInvertoriesComponent 
+        DisplaySearchResult="true"
+        OnSelectInvertory="OnSelectInvertory"
+    ></ViewInvertoriesComponent>
+</div>
+
+@if (ProductInvertories != null && ProductInvertories.Count > 0)
+{
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Quantity</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var productInvertory in ProductInvertories)
+            {
+                <tr>
+                    <td>
+                        @productInvertory.Invertory.Name
+                    </td>
+                    <td>
+                        <input type="number" min="0" 
+                        @bind-value="productInvertory.InvertoryQuantity" 
+                        @bind-value:event="oninput"
+                        @onchange="OnInvertoryQuantityChanged"
+                        />
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-link" @onclick="@(() => RemoveInvertory(productInvertory))">Remove</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    [Parameter]
+    public EventCallback<List<ProductInvertory>> OnInvertorySelected { get; set; }
+
+    [Parameter]
+    public List<ProductInvertory> ProductInvertories { get; set; } = new List<ProductInvertory>();
+
+    private async Task OnInvertoryQuantityChanged()
+    {
+        await OnInvertorySelected.InvokeAsync(ProductInvertories);
+    }
+
+    private async Task OnSelectInvertory(Invertory invertory)
+    {
+        if (!ProductInvertories.Any(x => x.Invertory.Name.Equals(invertory.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            ProductInvertories.Add(new ProductInvertory
+                {
+                    InvertoryId = invertory.Id,
+                    Invertory = invertory
+                });
+        }
+
+        await OnInvertorySelected.InvokeAsync(ProductInvertories);
+    }
+
+    private void RemoveInvertory(ProductInvertory productInvertory)
+    {
+        ProductInvertories.Remove(productInvertory);
+    }
+}

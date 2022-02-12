@@ -1,0 +1,57 @@
+﻿@page "/addinvertory"
+
+@attribute [Authorize]
+
+@inject IAddInvertoryUseCase AddInvertoryUseCase
+@inject NavigationManager NavigationManager
+
+<h3>Add Invertory</h3>
+<br />
+
+@if (_invertory != null)
+{
+    <EditForm Model="_invertory" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+
+        <div class="form-group">
+            <label for="name">Invertory Name</label>
+            <InputText id="name" @bind-Value="_invertory.Name" class="form-control"></InputText>
+        </div>
+
+        <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <InputNumber id="quantity" @bind-Value="_invertory.Quantity" class="form-control"></InputNumber>
+        </div>
+
+        <div class="form-group">
+            <label for="price">Price</label>
+            <InputNumber id="price" @bind-Value="_invertory.Price" class="form-control"></InputNumber>
+        </div>
+
+        <br />
+        
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    private Invertory? _invertory;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _invertory = new();
+    }
+
+    private async Task OnValidSubmit()
+    {
+        if(_invertory != null)
+        {
+            await AddInvertoryUseCase.ExecuteAsync(_invertory);
+
+            NavigationManager.NavigateTo("/invertories");
+        }
+    }
+}

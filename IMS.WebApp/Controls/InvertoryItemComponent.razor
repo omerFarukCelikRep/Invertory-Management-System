@@ -1,0 +1,23 @@
+﻿@inject NavigationManager NavigationManager
+
+@if (Invertory != null)
+{
+    <tr>
+        <td>@Invertory.Name</td>
+        <td>@Invertory.Quantity</td>
+        <td>@Invertory.Price.ToString("c")</td>
+        <td>
+            <button type="button" class="btn btn-light" @onclick="@(() => EditInvertory(Invertory.Id))">Edit</button>
+        </td>
+    </tr>
+}
+
+@code {
+    [Parameter]
+    public Invertory? Invertory { get; set; }
+
+    private void EditInvertory(Guid id)
+    {
+        NavigationManager.NavigateTo($"/editinvertory/{id}");
+    }
+}

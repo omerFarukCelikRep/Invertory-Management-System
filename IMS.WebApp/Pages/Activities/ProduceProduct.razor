@@ -1,0 +1,73 @@
+﻿@page "/produce"
+
+@attribute [Authorize]
+
+@inject IProduceProductUseCase ProduceProductUseCase
+@inject IValidateEnoughInvertoriesForProducingUseCase ValidateEnoughInvertoriesForProducingUseCase
+
+<ErrorMessageComponent 
+    ErrorMessage="@_errorMessage"
+></ErrorMessageComponent>
+
+<h3>Produce Product</h3>
+<br />
+
+@if (_produceVM != null)
+{
+    <EditForm Model="_produceVM" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+
+        <div class="form-group">
+            <label for="purchaseOrder">Production Number</label>
+            <InputText id="purchaseOrder" @bind-Value="_produceVM.ProductionNumber" class="form-control"></InputText>
+        </div>
+        <div class="form-group">
+            <label for="name">Product To Produce</label>
+            <ViewProductsComponent 
+                OnSelectProduct="OnSelectProduct"
+                DisplaySearchResult="true"
+            ></ViewProductsComponent>
+            <InputText id="name" class="form-control" @bind-Value="_produceVM.ProductName" disabled></InputText>
+            <input type="hidden" value="@_produceVM.ProductId" />
+
+            @if (_selectedProduct != null)
+            {
+                <text>Price : </text>
+                @_selectedProduct.Price.ToString("c")
+            }
+        </div>
+        <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <InputNumber id="quantity" @bind-Value="_produceVM.QuantityToProduce" class="form-control"></InputNumber>
+        </div>
+        <br />
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    private ProduceVM _produceVM = new ProduceVM();
+    private Product _selectedProduct;
+    private string _errorMessage;
+
+    private async Task OnValidSubmit()
+    {
+        if (!await ValidateEnoughInvertoriesForProducingUseCase.ExecuteAsync(_selectedProduct, _produceVM.QuantityToProduce))
+        {
+            _errorMessage = $"The invertories are not enough for producing {_selectedProduct.Name} X {_produceVM.QuantityToProduce} times";
+            return;
+        }
+
+        _errorMessage = string.Empty;
+
+        await ProduceProductUseCase.ExecuteAsync(_produceVM.ProductionNumber, _selectedProduct, _produceVM.QuantityToProduce, "Ömer Faruk");
+    }
+
+    public void OnSelectProduct(Product product)
+    {
+        _selectedProduct = product;
+        _produceVM.ProductId = product.Id;
+        _produceVM.ProductName = product.Name;
+    }
+}

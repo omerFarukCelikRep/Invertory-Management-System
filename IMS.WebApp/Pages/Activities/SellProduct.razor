@@ -1,0 +1,75 @@
+﻿@page "/sell"
+
+@attribute [Authorize]
+
+@inject ISellProductUseCase SellProductUseCase
+
+<ErrorMessageComponent ErrorMessage="@_errorMessage"
+></ErrorMessageComponent>
+<br />
+
+<h3>Sell Product</h3>
+<br />
+
+@if (_sellVM != null)
+{
+    <EditForm Model="_sellVM" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+
+        <div class="form-group">
+            <label for="purchaseOrder">Sales Order Number</label>
+            <InputText id="purchaseOrder" @bind-Value="_sellVM.SalesOrderNumber" class="form-control"></InputText>
+        </div>
+        <div class="form-group">
+            <label for="name">Product To Sell</label>
+            <ViewProductsComponent 
+                OnSelectProduct="OnSelectProduct"
+                DisplaySearchResult="true"
+            ></ViewProductsComponent>
+            <InputText id="na me" class="form-control" @bind-Value="_sellVM.ProductName" disabled></InputText>
+            <input type="hidden" value="@_sellVM.ProductId" />
+        </div>
+        <div class="form-group">
+            <label for="price">Price</label>
+            <InputNumber id="price" @bind-Value="_sellVM.ProductPrice" class="form-control"></InputNumber>
+        </div>
+        <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <InputNumber id="quantity" @bind-Value="_sellVM.QuantityToSell" class="form-control"></InputNumber>
+        </div>
+        <br />
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+@code {
+    private SellVM _sellVM = new SellVM();
+    private Product _selectedProduct;
+    private string _errorMessage;
+
+    private async Task OnValidSubmit()
+    {
+        if (_selectedProduct.Quantity < _sellVM.QuantityToSell)
+        {
+            _errorMessage = $"There quantity of the product is not enough. Only {_selectedProduct.Quantity} are available!";
+            return;
+        }
+
+        _errorMessage = string.Empty;
+
+        await SellProductUseCase.ExecuteAsync(_sellVM.SalesOrderNumber, _selectedProduct, _sellVM.QuantityToSell, "Ömer Faruk");
+
+        _sellVM = new();
+        _selectedProduct = null;
+        
+    }
+
+    private void OnSelectProduct(Product product)
+    {
+        _selectedProduct = product;
+        _sellVM.ProductId = product.Id;
+        _sellVM.ProductName = product.Name;
+        _sellVM.ProductPrice = product.Price;
+    }
+}

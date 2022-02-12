@@ -1,0 +1,67 @@
+﻿@page "/purchase"
+
+@attribute [Authorize]
+
+@inject IPurchaseInvertoryUseCase PurchaseInvertoryUseCase
+@inject NavigationManager NavigationManager
+
+<h3>Purchase Invertory</h3>
+<br />
+
+@if (_purchaseVM != null)
+{
+    <EditForm Model="_purchaseVM" OnValidSubmit="OnValidSubmit">
+        <DataAnnotationsValidator></DataAnnotationsValidator>
+        <ValidationSummary></ValidationSummary>
+
+        <div class="form-group">
+            <label for="purchaseOrder">Purchase Order</label>
+            <InputText id="purchaseOrder" @bind-Value="_purchaseVM.PurchaseOrder" class="form-control"></InputText>
+        </div>
+        <div class="form-group">
+            <label for="name">Invertory To Purchase</label>
+            <ViewInvertoriesComponent 
+                OnSelectInvertory="OnSelectInvertory"
+                DisplaySearchResult="true"
+            ></ViewInvertoriesComponent>
+            <InputText id="name" class="form-control" @bind-Value="_purchaseVM.InvertoryName" disabled></InputText>
+            <input type="hidden" value="@_purchaseVM.InvertoryId" />
+
+            @if (_selectedInvertory != null)
+            {
+                <text>Price : </text>
+                @_selectedInvertory.Price.ToString("c")
+            }
+        </div>
+        <div class="form-group">
+            <label for="quantity">Quantity</label>
+            <InputNumber id="quantity" @bind-Value="_purchaseVM.QuantityToPurchase" class="form-control"></InputNumber>
+        </div>
+        <br />
+        <button type="submit" class="btn btn-primary">Save</button>
+    </EditForm>
+}
+
+
+
+@code {
+    private PurchaseVM _purchaseVM = new();
+    private Invertory? _selectedInvertory;
+
+    private void OnSelectInvertory(Invertory invertory)
+    {
+        _selectedInvertory = invertory;
+        _purchaseVM.InvertoryId = invertory.Id;
+        _purchaseVM.InvertoryName = invertory.Name;
+    }
+
+    private async Task OnValidSubmit()
+    {
+        await PurchaseInvertoryUseCase.ExecuteAsync(_purchaseVM.PurchaseOrder, _selectedInvertory, _purchaseVM.QuantityToPurchase, "Ömer Faruk");
+
+        _purchaseVM = new();
+        _selectedInvertory = null;
+
+        NavigationManager.NavigateTo("/invertories");
+    }
+}
